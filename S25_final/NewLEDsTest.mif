@@ -1,0 +1,44 @@
+WIDTH=16;
+DEPTH=2048;
+
+ADDRESS_RADIX=HEX;
+DATA_RADIX=HEX;
+
+CONTENT BEGIN
+0000: B864; --     loadi 100
+0001: 5022; -- 	or bit9
+0002: 9820; --     out metronome
+0003: 801A; --     call tensecdelay
+0004: B864; --     loadi 100
+0005: 9820; --     out metronome
+0006: 801A; --     call tenSecDelay
+0007: 800B; --     call slowdown
+0008: 9000; --     in switches
+0009: 9820; --     out metronome
+000A: 2808; -- 	jump infloop
+000B: 0821; --     load max
+000C: 9820; --     out metronome
+000D: 8015; --     call tenthsecdelay
+000E: 0821; --     load max
+000F: 201F; --     sub one
+0010: 1021; --     store max
+0011: 380B; --     jpos sLoop
+0012: B900; --     loadi 256
+0013: 1021; -- 	store max
+0014: 8800; -- 	return
+0015: 9802; -- 	out timer
+0016: 9002; --       in timer
+0017: 201F; --       sub one
+0018: 3016; --     jneg pollLoop2 ; keep jumping untill 100 deciseconds
+0019: 8800; --     return
+001A: 9802; -- 	out timer
+001B: 9002; --       in timer
+001C: 2020; --       sub hundred
+001D: 301B; --     jneg pollLoop ; keep jumping untill 100 deciseconds
+001E: 8800; --     return
+001F: 0001; -- one: DW 1
+0020: 0064; -- hundred: DW 100
+0021: 0100; -- max: DW 256
+0022: 0200; -- Bit9:      DW &B1000000000
+[0023..07FF] : 0000; -- [empty memory]
+END;

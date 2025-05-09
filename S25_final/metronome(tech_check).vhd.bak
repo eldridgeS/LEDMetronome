@@ -1,0 +1,85 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.all;
+
+entity metronome is
+    Port ( clk_12MHz   : in  STD_LOGIC;  -- Clock input
+           resetn : in  STD_LOGIC;  -- Reset input
+			  CS : in STD_LOGIC; -- chip select
+			  dataIN : in STD_LOGIC_VECTOR (15 downto 0);  --7 bits for desired bpm
+           leds  : out STD_LOGIC_VECTOR (9 downto 0)  -- LED outputs
+         );
+end metronome;
+
+architecture Behavioral of metronome is
+
+    signal count : integer range 0 to 9 := 0;  -- Counter for LED index
+    signal direction : STD_LOGIC := '1';  -- '1' for forward, '0' for backward
+	 signal clk : STD_LOGIC := '0';
+	 signal bpm: STD_LOGIC_VECTOR (8 downto 0);
+	 signal bpm_int: integer range 0 to 511 := 0 ;
+	 signal divcount : integer := 0 ; 
+	 signal divider : integer range 0 to 12000000 := 0;
+	 signal CStoggle : STD_LOGIC;
+    
+begin
+	
+	process(clk_12MHz)
+	 begin
+		if rising_edge(clk_12MHz) then
+			bpm <= dataIN (8 downto 0);
+			bpm_int <= to_integer(unsigned(bpm));		
+		  divider <= 12000000 / (bpm_int/6);
+		  if (divcount < divider -1) then
+			divcount <= divcount + 1;
+			else 
+				divcount <= 0;
+				if clk = '0' then
+					clk <= '1';
+					end if;
+				if clk = '1' then
+					clk <= '0';
+					end if;
+			end if;
+		end if;
+	
+	end process;
+    process(clk, resetn)
+    begin
+		if (not(bpm_int = 0)) then 
+		if (CS = '1') then
+		CStoggle <= '1';
+		end if;
+		if (CStoggle <= '1') then
+        if resetn = '0' then
+            count <= 0;
+            direction <= '1';
+				CStoggle <= '0';
+            leds <= "0000000000";
+        elsif rising_edge(clk) then
+            -- Oscillating logic
+            if direction = '1' then
+                if count < 9 then
+                    count <= count + 1;
+                else
+                    direction <= '0';  -- Reverse direction when reaching the last LED
+                end if;
+            else  -- direction = '0'
+                if count > 0 then
+                    count <= count - 1;
+                else
+                    direction <= '1';  -- Change direction when reaching the first LED
+                end if;
+            end if;
+				else 
+				leds <= "0000000000";
+				end if;
+            
+            -- Update the LED array based on the count
+            leds <= (others => '0');
+            leds(count) <= '1';  -- Light up the current LED
+        end if;
+		 end if;
+    end process;
+
+end Behavioral;
